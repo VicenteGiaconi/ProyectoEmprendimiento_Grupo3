@@ -1,6 +1,16 @@
+import os
 from rest_framework import serializers
 from django.conf import settings
 from .models import AudioFile
+
+EXTENSION_TO_MIME = {
+    '.mp3': 'audio/mpeg',
+    '.wav': 'audio/wav',
+    '.ogg': 'audio/ogg',
+    '.mp4': 'audio/mp4',
+    '.m4a': 'audio/mp4',
+    '.webm': 'audio/webm',
+}
 
 
 class AudioFileSerializer(serializers.ModelSerializer):
@@ -11,6 +21,14 @@ class AudioFileSerializer(serializers.ModelSerializer):
 
     def validate_file(self, value):
         content_type = value.content_type
+
+        # Algunos clientes (ej. curl sin --type) envían application/octet-stream;
+        # en ese caso inferimos el tipo desde la extensión del archivo.
+        if content_type == 'application/octet-stream':
+            ext = os.path.splitext(value.name)[1].lower()
+            content_type = EXTENSION_TO_MIME.get(ext, content_type)
+            value.content_type = content_type
+
         if content_type not in settings.ALLOWED_AUDIO_TYPES:
             raise serializers.ValidationError(
                 f"Tipo de archivo no permitido: {content_type}. "
