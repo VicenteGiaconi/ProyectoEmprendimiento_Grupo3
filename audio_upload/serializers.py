@@ -16,8 +16,8 @@ EXTENSION_TO_MIME = {
 class AudioFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = AudioFile
-        fields = ['id', 'original_name', 'content_type', 'size_bytes', 'uploaded_at', 'file']
-        read_only_fields = ['id', 'original_name', 'content_type', 'size_bytes', 'uploaded_at']
+        fields = ['id', 'original_name', 'content_type', 'size_bytes', 'uploaded_at', 'file', 'transcription', 'transcription_status', 'detected_language', 'diarization', 'sentiment']
+        read_only_fields = ['id', 'original_name', 'content_type', 'size_bytes', 'uploaded_at', 'transcription', 'transcription_status', 'detected_language', 'diarization', 'sentiment']
 
     def validate_file(self, value):
         content_type = value.content_type
