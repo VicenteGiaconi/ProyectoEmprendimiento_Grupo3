@@ -123,13 +123,18 @@ with st.sidebar:
 
     uploaded_file = st.file_uploader("Subir archivo de audio (.mp3, .wav)", type=["mp3", "wav"])
     if uploaded_file:
-        with st.spinner('Analizando audio automáticamente...'):
-            files = {'file': uploaded_file}
-            response = requests.post('http://127.0.0.1:8000/api/audio/upload/', files=files)
-            if response.status_code == 201:
-                st.success("Archivo procesado exitosamente.")
-            else:
-                st.error(f"Error al procesar el archivo: {response.status_code} - {response.text}")
+        # Verificar el tipo MIME del archivo
+        allowed_types = ["audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/webm"]
+        if uploaded_file.type not in allowed_types:
+            st.error(f"Tipo de archivo no permitido: {uploaded_file.type}. Tipos aceptados: {', '.join(allowed_types)}")
+        else:
+            with st.spinner('Analizando audio automáticamente...'):
+                files = {'file': uploaded_file}
+                response = requests.post('http://127.0.0.1:8000/api/audio/upload/', files=files)
+                if response.status_code == 201:
+                    st.success("Archivo procesado exitosamente.")
+                else:
+                    st.error(f"Error al procesar el archivo: {response.status_code} - {response.text}")
 
     if st.button("🔄 Recargar datos", use_container_width=True):
         st.cache_data.clear()
