@@ -124,7 +124,7 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Subir archivo de audio (.mp3, .wav)", type=["mp3", "wav"])
     if uploaded_file:
         # Verificar el tipo MIME del archivo
-        allowed_types = ["audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/webm"]
+        allowed_types = ["audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/webm", "audio/vnd.wave"]
         if uploaded_file.type not in allowed_types:
             st.error(f"Tipo de archivo no permitido: {uploaded_file.type}. Tipos aceptados: {', '.join(allowed_types)}")
         else:
