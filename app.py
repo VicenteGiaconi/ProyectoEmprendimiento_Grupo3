@@ -123,28 +123,29 @@ with st.sidebar:
 
     uploaded_file = st.file_uploader("Subir archivo de audio (.mp3, .wav)", type=["mp3", "wav"])
     if uploaded_file:
-        # Validar usando la extensión del archivo para evitar problemas de tipos MIME
+        file_key = f"{uploaded_file.name}_{uploaded_file.size}"
         file_name = uploaded_file.name.lower()
         if not (file_name.endswith('.mp3') or file_name.endswith('.wav')):
-            st.error(f"Extensión de archivo no permitida. Solo se aceptan archivos .mp3 y .wav")
+            st.error("Extensión de archivo no permitida. Solo se aceptan archivos .mp3 y .wav")
+        elif st.session_state.get('last_uploaded') == file_key:
+            st.success("Archivo procesado y analizado exitosamente.")
         else:
-            with st.spinner('Analizando audio automáticamente...'):
-                files = {'file': (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+            with st.spinner('Transcribiendo y analizando... esto puede tomar unos segundos.'):
+                mime = 'audio/mpeg' if file_name.endswith('.mp3') else 'audio/wav'
+                files = {'file': (uploaded_file.name, uploaded_file.getvalue(), mime)}
                 response = requests.post('http://127.0.0.1:8000/api/audio/upload/', files=files)
                 if response.status_code == 201:
-                    st.success("Archivo procesado exitosamente.")
+                    from analytics.pipeline import run as _run_pipeline
+                    _run_pipeline()
+                    st.session_state['last_uploaded'] = file_key
+                    st.success("Archivo procesado y analizado exitosamente.")
+                    st.cache_data.clear()
                 else:
                     st.error(f"Error al procesar el archivo: {response.status_code} - {response.text}")
 
     if st.button("🔄 Recargar datos", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
-
-    st.markdown("---")
-    st.caption(
-        "Ejecuta el pipeline antes de abrir este dashboard:\n"
-        "```\npython -m analytics.pipeline\n```"
-    )
 
 # ─────────────────── tabs ───────────────────
 
