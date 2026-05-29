@@ -9,6 +9,7 @@ from typing import Optional
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import requests
 
 from analytics.database import (
     delete_protocol_rule,
@@ -119,6 +120,16 @@ with st.sidebar:
         index=2,
     )
     st.divider()
+
+    uploaded_file = st.file_uploader("Subir archivo de audio (.mp3, .wav)", type=["mp3", "wav"])
+    if uploaded_file:
+        with st.spinner('Analizando audio automáticamente...'):
+            files = {'file': uploaded_file}
+            response = requests.post('http://127.0.0.1:8000/api/audio/upload/', files=files)
+            if response.status_code == 201:
+                st.success("Archivo procesado exitosamente.")
+            else:
+                st.error(f"Error al procesar el archivo: {response.status_code} - {response.text}")
 
     if st.button("🔄 Recargar datos", use_container_width=True):
         st.cache_data.clear()
