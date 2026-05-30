@@ -48,3 +48,4 @@ static_root/
 # OS
 .DS_Store
 Thumbs.db
+.aider*
