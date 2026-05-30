@@ -22,9 +22,10 @@ class AudioFileSerializer(serializers.ModelSerializer):
     def validate_file(self, value):
         content_type = value.content_type
 
-        # Algunos clientes (ej. curl sin --type) envían application/octet-stream;
-        # en ese caso inferimos el tipo desde la extensión del archivo.
-        if content_type == 'application/octet-stream':
+        # Normaliza tipos no-estándar usando la extensión del archivo.
+        # Cubre: curl sin --type (octet-stream), Firefox/Safari con mp3 (audio/mp3),
+        # y variantes de WAV (audio/x-wav, audio/vnd.wave).
+        if content_type not in settings.ALLOWED_AUDIO_TYPES:
             ext = os.path.splitext(value.name)[1].lower()
             content_type = EXTENSION_TO_MIME.get(ext, content_type)
             value.content_type = content_type
