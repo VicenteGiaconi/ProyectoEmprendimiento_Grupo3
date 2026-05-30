@@ -6,7 +6,7 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
-def transcribe_audio(file_path: str, language: str = None) -> dict:
+def transcribe_audio(file_path: str, language: str = "es-419") -> dict:
     client = DeepgramClient(api_key=settings.DEEPGRAM_API_KEY)
 
     with open(file_path, 'rb') as f:

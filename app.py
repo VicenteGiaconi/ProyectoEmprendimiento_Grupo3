@@ -17,7 +17,7 @@ from analytics.database import (
     get_protocol_rules,
     save_protocol_rule,
 )
-from analytics.models import FullAnalysis
+from analytics.models import FullAnalysis, SpeakerMetrics
 
 # ─────────────────── page config ───────────────────
 
@@ -50,13 +50,31 @@ def _utc_to_local_date(dt: datetime) -> date:
     return dt.astimezone().date()
 
 
+def _merge_speaker_metrics(
+    ids: set[int],
+    speaker_metrics: dict,
+) -> SpeakerMetrics | None:
+    """Combina métricas de múltiples IDs que pertenecen al mismo rol."""
+    parts = [speaker_metrics[i] for i in ids if i in speaker_metrics]
+    if not parts:
+        return None
+    return SpeakerMetrics(
+        speaker_id=min(ids),
+        total_time=sum(s.total_time for s in parts),
+        monopoly_percentage=sum(s.monopoly_percentage for s in parts),
+        word_count=sum(s.word_count for s in parts),
+    )
+
+
 def to_dataframe(analyses: list[FullAnalysis]) -> pd.DataFrame:
     rows = []
     for a in analyses:
         m = a.math_metrics
         g = a.gemini_analysis
-        agent_m = m.speaker_metrics.get(0)
-        client_m = m.speaker_metrics.get(1)
+        agent_ids = set(g.agent_speaker_ids) if g and g.agent_speaker_ids else {0}
+        client_ids = set(g.client_speaker_ids) if g and g.client_speaker_ids else {1}
+        agent_m = _merge_speaker_metrics(agent_ids, m.speaker_metrics)
+        client_m = _merge_speaker_metrics(client_ids, m.speaker_metrics)
 
         rows.append(
             {
@@ -192,7 +210,7 @@ with tab_dash:
         if pd.notna(avg_agent) and pd.notna(avg_client):
             pie_df = pd.DataFrame(
                 {
-                    "Hablante": ["Agente (Speaker 0)", "Cliente (Speaker 1)"],
+                    "Hablante": ["Agente", "Cliente"],
                     "% Tiempo": [avg_agent, avg_client],
                 }
             )
@@ -349,7 +367,7 @@ with tab_dash:
         if steps:
             st.markdown(f"**Categoría:** {row['Categoría']}  \n**Motivo:** {row['Motivo']}")
             st.markdown(
-                f"**FCR:** {bool_icon(row['FCR'] == '✅')}  \n"
+                f"**FCR:** {bool_icon(row['FCR'])}  \n"
                 f"**Justificación:** {row.get('Justificación FCR', '—')}"
             )
             st.markdown(f"**Sentimiento:** {row.get('Sentimiento', '—')}")

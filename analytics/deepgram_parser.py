@@ -66,7 +66,8 @@ def build_transcript(
 ) -> str:
     """Build a labelled transcript string ready to send to Gemini."""
     if speaker_names is None:
-        speaker_names = {0: "Agente", 1: "Cliente"}
+        unique_ids = sorted({w.speaker for w in words})
+        speaker_names = {sid: f"Interlocutor {sid}" for sid in unique_ids}
 
     lines: list[str] = []
     for utt in group_utterances(words):

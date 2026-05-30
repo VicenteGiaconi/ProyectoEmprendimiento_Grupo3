@@ -28,8 +28,19 @@ def _build_config(protocol_rules: dict[str, dict]) -> types.GenerateContentConfi
     system_prompt = (
         "Eres un sistema experto en análisis de calidad de atención al cliente. "
         "Analiza la transcripción de una llamada entre un Agente y un Cliente.\n\n"
+        "La transcripción usa etiquetas 'Interlocutor N' porque el sistema de diarización "
+        "puede asignar IDs extra: a veces divide a la misma persona en varios IDs, "
+        "y a veces detecta fuentes que no son parte de la conversación (ruido de fondo, "
+        "televisión, terceros que no intervienen, etc.). "
+        "Identifica qué IDs pertenecen al Agente (el representante de atención al cliente: "
+        "saluda, ofrece soluciones, sigue protocolo de servicio) y cuáles al Cliente. "
+        "Incluye solo los IDs que realmente participan en la conversación; "
+        "omite cualquier ID que corresponda a ruido, ambiente u otras fuentes irrelevantes. "
+        "Devuelve todos los IDs de cada rol aunque sean más de uno.\n\n"
         "Debes devolver ÚNICAMENTE un objeto JSON válido con la siguiente estructura exacta:\n"
         "{\n"
+        '  "agent_speaker_ids": [0],\n'
+        '  "client_speaker_ids": [1],\n'
         '  "visit_reason": "descripción corta del motivo de la visita/llamada",\n'
         '  "visit_category": "uno de: Reclamo, Consulta, Venta, Devolución, Otro",\n'
         '  "protocol": {\n'
@@ -69,6 +80,8 @@ def _parse_response(text: str, protocol_rules: dict[str, dict]) -> GeminiAnalysi
             fcr=bool(data["fcr"]),
             fcr_justification=data["fcr_justification"],
             overall_sentiment=data.get("overall_sentiment"),
+            agent_speaker_ids=[int(i) for i in data.get("agent_speaker_ids", [])],
+            client_speaker_ids=[int(i) for i in data.get("client_speaker_ids", [])],
         )
     except KeyError as exc:
         logger.error("Missing key in Gemini response: %s", exc)

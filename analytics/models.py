@@ -60,6 +60,8 @@ class GeminiAnalysis(BaseModel):
     fcr: bool
     fcr_justification: str
     overall_sentiment: Optional[str] = None
+    agent_speaker_ids: list[int] = Field(default_factory=list)
+    client_speaker_ids: list[int] = Field(default_factory=list)
 
 
 class FullAnalysis(BaseModel):

@@ -7,7 +7,6 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from .config import AGENT_SPEAKER, CLIENT_SPEAKER
 from .database import get_analysis, get_audio_files, get_protocol_rules, save_analysis
 from .deepgram_parser import build_transcript, parse_diarization
 from .gemini_client import GeminiClient
@@ -26,7 +25,8 @@ async def process_record(
     """Process a single AudioFile dict into a FullAnalysis and persist it."""
     audio_id: int = record["id"]
 
-    if skip_existing and get_analysis(audio_id) is not None:
+    existing = get_analysis(audio_id)
+    if skip_existing and existing is not None and existing.gemini_analysis is not None:
         logger.info("audio_id=%d already processed — skipping", audio_id)
         return None
 
@@ -40,10 +40,7 @@ async def process_record(
 
     # Module 2 — Gemini semantic analysis
     gemini_result = None
-    transcript = build_transcript(
-        words,
-        speaker_names={AGENT_SPEAKER: "Agente", CLIENT_SPEAKER: "Cliente"},
-    )
+    transcript = build_transcript(words)
     if transcript.strip():
         try:
             gemini_result = await gemini.analyze(transcript, protocol_rules)
