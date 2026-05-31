@@ -1,6 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .forms import AudioFileUploadForm
 from analytics.pipeline import run_pipeline
+from audio_upload.models import AudioFile 
 
 def upload_audio(request):
     if request.method == 'POST':
@@ -11,7 +12,12 @@ def upload_audio(request):
             return redirect('dashboard')
     else:
         form = AudioFileUploadForm()
-    return render(request, 'dashboard/upload.html', {'form': form})
+    return render(request, 'upload.html', {'form': form})
 
 def dashboard(request):
-    return render(request, 'dashboards/base.html')
+    audios = AudioFile.objects.order_by('-uploaded_at')
+    return render(request, 'dashboard.html', {'audios': audios})
+
+def detail(request, audio_file_id):
+    audio_file = get_object_or_404(AudioFile, id=audio_file_id)
+    return render(request, 'detail.html', {'audio_file': audio_file})

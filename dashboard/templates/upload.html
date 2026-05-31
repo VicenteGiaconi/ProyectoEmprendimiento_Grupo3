@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm mt-5">
+            <div class="card-header bg-white pt-4 pb-2 text-center border-0">
+                <h2>Subir Archivo de Audio</h2>
+                <p class="text-muted">Formatos permitidos: .mp3, .wav</p>
+            </div>
+            <div class="card-body px-5 pb-5">
+                <form method="post" enctype="multipart/form-data" id="upload-form">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        {{ form.as_p }}
+                    </div>
+                    
+                    <button type="submit" id="upload-button" class="btn btn-primary w-100 py-2">
+                        Subir y Analizar
+                    </button>
+
+                    <div id="loading-message" class="alert alert-info mt-3 text-center" style="display:none;" aria-live="polite">
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Transcribiendo y analizando con Gemini... esto puede tomar unos segundos.
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('upload-form').addEventListener('submit', function() {
+        const btn = document.getElementById('upload-button');
+        const msg = document.getElementById('loading-message');
+        
+        btn.disabled = true;
+        btn.innerText = 'Procesando...';
+        msg.style.display = 'block';
+    });
+</script>
+{% endblock %}

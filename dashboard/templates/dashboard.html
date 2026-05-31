@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Dashboard de Atención al Cliente</h1>
+    <form method="get" class="d-flex gap-2" aria-label="Filtrar por período">
+        <select name="period" class="form-select" onchange="this.form.submit()">
+            <option value="Hoy" {% if period == 'Hoy' %}selected{% endif %}>Hoy</option>
+            <option value="7d" {% if period == '7d' %}selected{% endif %}>Últimos 7 días</option>
+            <option value="30d" {% if period == '30d' %}selected{% endif %}>Últimos 30 días</option>
+            <option value="all" {% if period == 'all' %}selected{% endif %}>Todo el tiempo</option>
+        </select>
+    </form>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="dash-tab" data-bs-toggle="tab" data-bs-target="#dash" type="button" role="tab" aria-controls="dash" aria-selected="true">📊 Dashboard</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="protocol-tab" data-bs-toggle="tab" data-bs-target="#protocol" type="button" role="tab" aria-controls="protocol" aria-selected="false">⚙️ Protocolo</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="dashboardTabsContent">
+    <div class="tab-pane fade show active" id="dash" role="tabpanel" aria-labelledby="dash-tab">
+        
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm text-center py-3">
+                    <h5 class="card-title text-muted mb-1">Total atenciones</h5>
+                    <h2 class="mb-0">{{ total_calls|default:"0" }}</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm text-center py-3">
+                    <h5 class="card-title text-muted mb-1">Resolución 1ra llamada</h5>
+                    <h2 class="mb-0">{{ fcr_rate|default:"0" }}%</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm text-center py-3">
+                    <h5 class="card-title text-muted mb-1">Interrupciones/min</h5>
+                    <h2 class="mb-0">{{ avg_interruptions|default:"0" }}</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm text-center py-3">
+                    <h5 class="card-title text-muted mb-1">Protocolo %</h5>
+                    <h2 class="mb-0">{{ avg_protocol|default:"0" }}%</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm p-3 h-100">
+                    <h5 class="card-title">Monopolio de Conversación</h5>
+                    <div>{{ fig_monopoly|safe }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm p-3 h-100">
+                    <h5 class="card-title">Latencia Promedio por Fecha</h5>
+                    <div>{{ fig_latency|safe }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow-sm p-3">
+                    <h5 class="card-title">Tasa de Resolución FCR por Fecha</h5>
+                    <div>{{ fig_fcr_trend|safe }}</div>
+                </div>
+            </div>
+        </div>
+
+        <h4 class="mb-3">Tabla de Atenciones</h4>
+        {% if audios %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Fecha</th>
+                            <th>Categoría</th>
+                            <th>FCR</th>
+                            <th>Protocolo %</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for audio in audios %}
+                        <tr>
+                            <td>{{ audio.original_name }}</td>
+                            <td>{{ audio.uploaded_at|date:"d/m/Y H:i" }}</td>
+                            <td>{{ audio.language_detected|default:'No detectado' }}</td>
+                            <td>{% if audio.fcr %}✅{% else %}❌{% endif %}</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ audio.protocol_score }}%;" aria-valuenow="{{ audio.protocol_score }}" aria-valuemin="0" aria-valuemax="100">{{ audio.protocol_score }}%</div>
+                                </div>
+                            </td>
+                            <td><a href="{% url 'detail' audio.id %}" class="btn btn-sm btn-outline-primary" aria-label="Ver detalle de {{ audio.original_name }}">Ver Detalle</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info" role="alert">
+                No hay datos para el período seleccionado. Sube audios para comenzar el análisis.
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="tab-pane fade" id="protocol" role="tabpanel" aria-labelledby="protocol-tab">
+        <h3 class="mb-3">Configuración de Protocolo</h3>
+        <p class="text-muted">Estos pasos se evalúan en el siguiente análisis que ejecutes.</p>
+        
+        <div class="card shadow-sm p-4 mb-4">
+            <h5>Agregar nuevo paso</h5>
+            <form method="post" action="." class="row g-3">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <label for="new_label" class="form-label">Nombre corto</label>
+                    <input type="text" class="form-control" id="new_label" name="new_label" placeholder="Ej: Verificó identidad" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="new_desc" class="form-label">Criterio para Gemini</label>
+                    <input type="text" class="form-control" id="new_desc" name="new_desc" placeholder="Ej: El agente solicitó el DNI..." required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" name="add_rule" class="btn btn-primary w-100">➕ Agregar</button>
+                </div>
+            </form>
+        </div>
+
+        {% if protocol_rules %}
+            <ul class="list-group">
+                {% for key, info in protocol_rules.items %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ info.label }}</strong><br>
+                        <small class="text-muted">{{ info.description }}</small>
+                    </div>
+                    <form method="post" action=".">
+                        {% csrf_token %}
+                        <input type="hidden" name="rule_key" value="{{ key }}">
+                        <button type="submit" name="delete_rule" class="btn btn-sm btn-outline-danger" aria-label="Eliminar paso">🗑️</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="alert alert-secondary">No hay pasos definidos en el protocolo actual.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Detalle de Atención: {{ audio_file.original_name }}</h2>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">← Volver al Dashboard</a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm py-3 px-4">
+                <h6 class="text-muted mb-1">Duración total</h6>
+                <h4>{{ audio_file.math_metrics.total_duration|default:"0"|floatformat:1 }} s</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm py-3 px-4">
+                <h6 class="text-muted mb-1">Interrupciones/min</h6>
+                <h4>{{ audio_file.math_metrics.interruption_rate|default:"0"|floatformat:2 }}</h4>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm py-3 px-4">
+                <h6 class="text-muted mb-1">Latencia promedio</h6>
+                <h4>{{ audio_file.math_metrics.avg_reaction_time|default:"0"|floatformat:2 }} s</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm p-3 h-100">
+                <h5 class="card-title">Distribución del tiempo</h5>
+                <div>{{ fig_monopoly_detail|safe }}</div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm p-4 h-100">
+                <h5 class="mb-3">Evaluación Cualitativa (Gemini)</h5>
+                <p><strong>Categoría:</strong> {{ audio_file.gemini_analysis.visit_category|default:"—" }}</p>
+                <p><strong>Motivo:</strong> {{ audio_file.gemini_analysis.visit_reason|default:"—" }}</p>
+                <p><strong>Sentimiento:</strong> {{ audio_file.gemini_analysis.overall_sentiment|default:"—" }}</p>
+                <p>
+                    <strong>Resolución FCR:</strong> 
+                    {% if audio_file.gemini_analysis.fcr %}✅ Sí{% else %}❌ No{% endif %}
+                </p>
+                <p><strong>Justificación FCR:</strong> {{ audio_file.gemini_analysis.fcr_justification|default:"—" }}</p>
+                
+                <h6 class="mt-4 mb-2">Checklist de Protocolo</h6>
+                <ul class="list-group">
+                    {% for step, result in audio_file.gemini_analysis.protocol.steps.items %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        {{ step }}
+                        <span>{% if result %}✅{% else %}❌{% endif %}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
