@@ -12,3 +12,6 @@ def upload_audio(request):
     else:
         form = AudioFileUploadForm()
     return render(request, 'dashboard/upload.html', {'form': form})
+
+def dashboard(request):
+    return render(request, 'dashboards/base.html')
