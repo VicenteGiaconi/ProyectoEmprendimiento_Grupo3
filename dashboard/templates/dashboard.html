@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+{% block nav_dashboard %}active{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+
+{% block topbar_actions %}
+<form method="get" class="d-flex align-items-center gap-2">
+    <i class="bi bi-funnel text-muted" style="font-size:13px;"></i>
+    <select name="period" onchange="this.form.submit()"
+            style="border:1px solid #e5e7eb;border-radius:6px;padding:4px 10px;
+                   font-size:13px;font-family:inherit;background:#fff;color:#374151;outline:none;">
+        <option value="Hoy"  {% if period == 'Hoy'  %}selected{% endif %}>Hoy</option>
+        <option value="7d"   {% if period == '7d'   %}selected{% endif %}>Últimos 7 días</option>
+        <option value="30d"  {% if period == '30d'  %}selected{% endif %}>Últimos 30 días</option>
+        <option value="all"  {% if period == 'all'  %}selected{% endif %}>Todo el tiempo</option>
+    </select>
+</form>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════ Page tabs ══════ -->
+<div data-tabs>
+<div class="page-tabs">
+    <button class="tab-btn active" data-target="tab-resumen">
+        <i class="bi bi-speedometer2"></i> Resumen
+    </button>
+    <button class="tab-btn" data-target="tab-llamadas">
+        <i class="bi bi-table"></i> Atenciones
+        <span class="badge badge-gray" style="font-size:11px;">{{ total_calls }}</span>
+    </button>
+    <button class="tab-btn" data-target="tab-protocolo">
+        <i class="bi bi-list-check"></i> Protocolo
+    </button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 1 · RESUMEN
+══════════════════════════════════════════ -->
+<div class="tab-panel active" id="tab-resumen">
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3">
+            <div class="kpi kpi-blue">
+                <div class="kpi-icon"><i class="bi bi-telephone-inbound-fill"></i></div>
+                <div class="kpi-value">{{ total_calls|default:"0" }}</div>
+                <div class="kpi-label">Total atenciones</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="kpi kpi-green">
+                <div class="kpi-icon"><i class="bi bi-patch-check-fill"></i></div>
+                <div class="kpi-value">{{ fcr_rate|default:"0" }}<sup>%</sup></div>
+                <div class="kpi-label">Resolución 1ra llamada</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="kpi kpi-amber">
+                <div class="kpi-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                <div class="kpi-value">{{ avg_interruptions|default:"0" }}</div>
+                <div class="kpi-label">Interrupciones / min</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="kpi kpi-violet">
+                <div class="kpi-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
+                <div class="kpi-value">{{ avg_protocol|default:"0" }}<sup>%</sup></div>
+                <div class="kpi-label">Cumplimiento protocolo</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts row: Monopolio + Latencia -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-5">
+            <div class="card" style="padding:16px 18px 8px;">
+                <div class="card-header-bar">
+                    <i class="bi bi-pie-chart-fill" style="color:var(--em-500);font-size:13px;"></i>
+                    <span class="card-title">Monopolio de conversación</span>
+                </div>
+                {% if fig_monopoly %}
+                    {{ fig_monopoly|safe }}
+                {% else %}
+                    <div class="chart-empty">
+                        <i class="bi bi-pie-chart"></i>
+                        <span>Sin datos suficientes</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card" style="padding:16px 18px 8px;">
+                <div class="card-header-bar">
+                    <i class="bi bi-graph-up" style="color:#16a34a;font-size:13px;"></i>
+                    <span class="card-title">Latencia promedio por fecha</span>
+                </div>
+                {% if fig_latency %}
+                    {{ fig_latency|safe }}
+                {% else %}
+                    <div class="chart-empty">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Sin datos suficientes</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- FCR trend -->
+    <div class="card mb-3" style="padding:16px 18px 8px;">
+        <div class="card-header-bar">
+            <i class="bi bi-activity" style="color:var(--em-600);font-size:13px;"></i>
+            <span class="card-title">Tasa de resolución FCR por fecha</span>
+        </div>
+        {% if fig_fcr_trend %}
+            {{ fig_fcr_trend|safe }}
+        {% else %}
+            <div class="chart-empty">
+                <i class="bi bi-activity"></i>
+                <span>Sin datos suficientes</span>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Categorías + Protocolo -->
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card" style="padding:16px 18px 8px;">
+                <div class="card-header-bar">
+                    <i class="bi bi-bar-chart-fill" style="color:#3b82f6;font-size:13px;"></i>
+                    <span class="card-title">Distribución por categoría</span>
+                </div>
+                {% if fig_categories %}
+                    {{ fig_categories|safe }}
+                {% else %}
+                    <div class="chart-empty">
+                        <i class="bi bi-bar-chart"></i>
+                        <span>Sin datos de categorías</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card" style="padding:16px 18px 8px;">
+                <div class="card-header-bar">
+                    <i class="bi bi-list-ol" style="color:var(--em-600);font-size:13px;"></i>
+                    <span class="card-title">Cumplimiento por paso de protocolo</span>
+                </div>
+                {% if fig_protocol_steps %}
+                    {{ fig_protocol_steps|safe }}
+                {% else %}
+                    <div class="chart-empty">
+                        <i class="bi bi-list-ol"></i>
+                        <span>Sin datos de protocolo</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>{# /tab-resumen #}
+
+
+<!-- ══════════════════════════════════════════
+     TAB 2 · ATENCIONES
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-llamadas">
+<div class="card" style="overflow:hidden;">
+    <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;
+                display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-weight:600;font-size:14px;">
+            Registro de atenciones
+        </span>
+        {% if audios %}
+        <span class="badge badge-gray">{{ total_calls }} registros</span>
+        {% endif %}
+    </div>
+
+    {% if audios %}
+    <div style="overflow-x:auto;">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Archivo</th>
+                <th>Fecha</th>
+                <th>Dur.</th>
+                <th>Categoría</th>
+                <th>FCR</th>
+                <th>Protocolo</th>
+                <th>Int/min</th>
+                <th>Latencia</th>
+                <th>Sentimiento</th>
+                <th>Motivo</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for a in audios %}
+        <tr>
+            <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="width:28px;height:28px;border-radius:6px;background:var(--em-50);
+                                display:flex;align-items:center;justify-content:center;
+                                flex-shrink:0;">
+                        <i class="bi bi-file-earmark-music" style="color:var(--em-600);font-size:13px;"></i>
+                    </div>
+                    <span style="font-weight:500;max-width:140px;overflow:hidden;
+                                 text-overflow:ellipsis;white-space:nowrap;"
+                          title="{{ a.original_name }}">{{ a.original_name }}</span>
+                </div>
+            </td>
+            <td style="color:#9ca3af;white-space:nowrap;">{{ a.uploaded_at|date:"d/m/Y H:i" }}</td>
+            <td style="white-space:nowrap;">
+                {% if a.total_duration %}{{ a.total_duration }}s{% else %}<span style="color:#d1d5db;">—</span>{% endif %}
+            </td>
+            <td>
+                {% if a.visit_category %}
+                <span class="badge badge-blue">{{ a.visit_category }}</span>
+                {% else %}<span style="color:#d1d5db;">—</span>{% endif %}
+            </td>
+            <td>
+                {% if a.fcr == True %}
+                    <span class="badge badge-green"><i class="bi bi-check-lg"></i> Sí</span>
+                {% elif a.fcr == False %}
+                    <span class="badge badge-red"><i class="bi bi-x-lg"></i> No</span>
+                {% else %}<span style="color:#d1d5db;">—</span>{% endif %}
+            </td>
+            <td>
+                {% if a.protocol_score is not None %}
+                <div class="prog-wrap">
+                    <div class="prog-bar-outer">
+                        <div class="prog-bar-inner
+                            {% if a.protocol_score >= 70 %}prog-hi
+                            {% elif a.protocol_score >= 40 %}prog-mid
+                            {% else %}prog-lo{% endif %}"
+                             style="width:{{ a.protocol_score }}%;"></div>
+                    </div>
+                    <span class="prog-pct">{{ a.protocol_score }}%</span>
+                </div>
+                {% else %}<span style="color:#d1d5db;">—</span>{% endif %}
+            </td>
+            <td>{{ a.interruption_rate|default:"—" }}</td>
+            <td>{{ a.latency|default:"—" }}</td>
+            <td>
+                {% if a.sentiment == 'positivo' %}
+                    <span class="badge badge-green">😊 positivo</span>
+                {% elif a.sentiment == 'negativo' %}
+                    <span class="badge badge-red">😞 negativo</span>
+                {% elif a.sentiment == 'neutral' %}
+                    <span class="badge badge-yellow">😐 neutral</span>
+                {% else %}<span style="color:#d1d5db;">—</span>{% endif %}
+            </td>
+            <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;
+                       white-space:nowrap;color:#6b7280;" title="{{ a.visit_reason }}">
+                {{ a.visit_reason|default:"—" }}
+            </td>
+            <td>
+                <a href="{% url 'detail' a.id %}"
+                   style="display:inline-flex;align-items:center;gap:5px;
+                          padding:5px 12px;border-radius:6px;font-size:12px;font-weight:500;
+                          border:1px solid #e5e7eb;color:#374151;text-decoration:none;
+                          background:#fff;transition:all .1s;"
+                   onmouseover="this.style.background='#f9fafb'"
+                   onmouseout="this.style.background='#fff'">
+                    <i class="bi bi-eye" style="font-size:13px;"></i> Ver
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div style="text-align:center;padding:64px 24px;color:#9ca3af;">
+        <i class="bi bi-inbox" style="font-size:40px;display:block;margin-bottom:12px;color:#d1d5db;"></i>
+        <p style="font-weight:600;margin-bottom:4px;color:#6b7280;">Sin atenciones para este período</p>
+        <p style="font-size:13px;margin:0;">
+            <a href="{% url 'upload_audio' %}" style="color:var(--em-500);text-decoration:none;">
+                Subí un audio
+            </a> para comenzar.
+        </p>
+    </div>
+    {% endif %}
+</div>
+</div>{# /tab-llamadas #}
+
+
+<!-- ══════════════════════════════════════════
+     TAB 3 · PROTOCOLO
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-protocolo">
+<div class="row g-3">
+
+    <!-- Form agregar paso -->
+    <div class="col-12">
+        <div class="card" style="padding:20px 24px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                <div style="width:32px;height:32px;background:var(--em-50);border-radius:8px;
+                            display:flex;align-items:center;justify-content:center;">
+                    <i class="bi bi-plus-lg" style="color:var(--em-600);font-size:15px;"></i>
+                </div>
+                <div>
+                    <div style="font-weight:600;font-size:14px;">Agregar paso de protocolo</div>
+                    <div style="font-size:12px;color:#9ca3af;">Se usará en el próximo análisis</div>
+                </div>
+            </div>
+            <form method="post" action="." class="row g-3 align-items-end">
+                {% csrf_token %}
+                <div class="col-md-4">
+                    <label style="font-size:12px;font-weight:600;color:#374151;
+                                  display:block;margin-bottom:5px;">Nombre corto</label>
+                    <input type="text" name="new_label" required
+                           placeholder="Ej: Verificó identidad"
+                           style="width:100%;border:1px solid #e5e7eb;border-radius:7px;
+                                  padding:8px 12px;font-size:13px;font-family:inherit;
+                                  outline:none;transition:border .12s;"
+                           onfocus="this.style.borderColor='#10b981'"
+                           onblur="this.style.borderColor='#e5e7eb'">
+                </div>
+                <div class="col-md-6">
+                    <label style="font-size:12px;font-weight:600;color:#374151;
+                                  display:block;margin-bottom:5px;">Criterio para Gemini</label>
+                    <input type="text" name="new_desc" required
+                           placeholder="Ej: El agente solicitó el número de documento..."
+                           style="width:100%;border:1px solid #e5e7eb;border-radius:7px;
+                                  padding:8px 12px;font-size:13px;font-family:inherit;
+                                  outline:none;transition:border .12s;"
+                           onfocus="this.style.borderColor='#10b981'"
+                           onblur="this.style.borderColor='#e5e7eb'">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" name="add_rule"
+                            style="width:100%;padding:8px 0;border:none;border-radius:7px;
+                                   background:var(--em-500);color:#fff;font-size:13px;font-weight:600;
+                                   font-family:inherit;cursor:pointer;
+                                   display:flex;align-items:center;justify-content:center;gap:6px;
+                                   transition:background .12s;"
+                            onmouseover="this.style.background='#059669'"
+                            onmouseout="this.style.background='#10b981'">
+                        <i class="bi bi-plus-lg"></i> Agregar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista pasos -->
+    <div class="col-12">
+        <div class="card" style="overflow:hidden;">
+            <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;
+                        display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-weight:600;font-size:14px;">Pasos actuales</span>
+                {% if protocol_rules %}
+                <span class="badge badge-purple">{{ protocol_rules|length }} pasos</span>
+                {% endif %}
+            </div>
+            {% if protocol_rules %}
+            {% for key, info in protocol_rules.items %}
+            <div style="display:flex;align-items:center;justify-content:space-between;
+                        padding:14px 20px;border-bottom:1px solid #f9fafb;
+                        {% if forloop.last %}border-bottom:none;{% endif %}">
+                <div>
+                    <div style="font-weight:500;font-size:13.5px;">{{ info.label }}</div>
+                    <div style="font-size:12px;color:#9ca3af;margin-top:2px;">{{ info.description }}</div>
+                </div>
+                <form method="post" action="." style="margin:0;">
+                    {% csrf_token %}
+                    <input type="hidden" name="rule_key" value="{{ key }}">
+                    <button type="submit" name="delete_rule"
+                            onclick="return confirm('¿Eliminar «{{ info.label }}»?')"
+                            style="border:1px solid #fecaca;background:#fff;color:#ef4444;
+                                   padding:5px 10px;border-radius:6px;cursor:pointer;
+                                   font-size:13px;font-family:inherit;
+                                   display:flex;align-items:center;gap:5px;
+                                   transition:background .12s;"
+                            onmouseover="this.style.background='#fef2f2'"
+                            onmouseout="this.style.background='#fff'">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div style="text-align:center;padding:48px 24px;color:#9ca3af;">
+                <i class="bi bi-clipboard2-x" style="font-size:32px;display:block;margin-bottom:10px;color:#d1d5db;"></i>
+                <p style="font-size:13px;margin:0;">No hay pasos. Agregá uno arriba.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+</div>{# /tab-protocolo #}
+
+</div>{# /data-tabs #}
+{% endblock %}
