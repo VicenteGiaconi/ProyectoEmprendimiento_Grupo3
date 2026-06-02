@@ -291,7 +291,8 @@ def dashboard(request):
     step_totals: dict[str, list[bool]] = {}
     for r in filtered:
         for key, val in r['_steps'].items():
-            step_totals.setdefault(key, []).append(bool(val))
+            if key in protocol_rules:  # ignorar pasos eliminados
+                step_totals.setdefault(key, []).append(bool(val))
 
     if step_totals:
         proto_rows = []
@@ -352,7 +353,7 @@ def detail(request, audio_file_id):
                 pd.DataFrame({'Hablante': ['Agente', 'Cliente'], '% Tiempo': [agent_time, client_time]}),
                 names='Hablante', values='% Tiempo', hole=0.5,
                 color_discrete_sequence=[_EM['agent'], _EM['client']],
-                title='Distribución del tiempo en esta llamada',
+                title='Distribución del tiempo en esta atención',
             )
             fig.update_traces(
                 textinfo='percent+label',

@@ -16,10 +16,10 @@ CLIENT_SPEAKER: int = 1
 # Default protocol rules seeded on first run
 # key → description (sent to Gemini as evaluation criterion)
 PROTOCOL_RULES: dict[str, str] = {
-    "greeted": "El agente saludó al cliente al inicio de la llamada",
+    "greeted": "El agente saludó al cliente al inicio de la atención",
     "asked_for_id": "El agente solicitó identificación o número de cliente",
     "offered_solution": "El agente ofreció una solución concreta al problema del cliente",
-    "said_goodbye": "El agente se despidió cordialmente al final de la llamada",
+    "said_goodbye": "El agente se despidió cordialmente al final de la atención",
     "empathy_shown": "El agente demostró empatía con el problema o la situación del cliente",
 }
 

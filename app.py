@@ -194,7 +194,7 @@ with tab_dash:
     avg_protocol = df["Protocolo %"].dropna().mean() if df["Protocolo %"].notna().any() else 0.0
 
     k1.metric("Total atenciones", len(df))
-    k2.metric("Resolución en 1ra llamada", f"{fcr_rate:.1f}%")
+    k2.metric("Resolución en 1ra atención", f"{fcr_rate:.1f}%")
     k3.metric("Interrupciones / min", f"{avg_int:.2f}")
     k4.metric("Cumplimiento de protocolo", f"{avg_protocol:.1f}%")
 

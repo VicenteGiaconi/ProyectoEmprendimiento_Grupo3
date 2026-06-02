@@ -24,7 +24,7 @@
     <button class="tab-btn active" data-target="tab-resumen">
         <i class="bi bi-speedometer2"></i> Resumen
     </button>
-    <button class="tab-btn" data-target="tab-llamadas">
+    <button class="tab-btn" data-target="tab-atenciones">
         <i class="bi bi-table"></i> Atenciones
         <span class="badge badge-gray" style="font-size:11px;">{{ total_calls }}</span>
     </button>
@@ -51,7 +51,7 @@
             <div class="kpi kpi-green">
                 <div class="kpi-icon"><i class="bi bi-patch-check-fill"></i></div>
                 <div class="kpi-value">{{ fcr_rate|default:"0" }}<sup>%</sup></div>
-                <div class="kpi-label">Resolución 1ra llamada</div>
+                <div class="kpi-label">Resolución 1ra atención</div>
             </div>
         </div>
         <div class="col-6 col-xl-3">
@@ -164,7 +164,7 @@
 <!-- ══════════════════════════════════════════
      TAB 2 · ATENCIONES
 ══════════════════════════════════════════ -->
-<div class="tab-panel" id="tab-llamadas">
+<div class="tab-panel" id="tab-atenciones">
 <div class="card" style="overflow:hidden;">
     <div style="padding:14px 18px;border-bottom:1px solid #f3f4f6;
                 display:flex;align-items:center;justify-content:space-between;">
@@ -276,13 +276,13 @@
         <p style="font-weight:600;margin-bottom:4px;color:#6b7280;">Sin atenciones para este período</p>
         <p style="font-size:13px;margin:0;">
             <a href="{% url 'upload_audio' %}" style="color:var(--em-500);text-decoration:none;">
-                Subí un audio
+                Sube un audio
             </a> para comenzar.
         </p>
     </div>
     {% endif %}
 </div>
-</div>{# /tab-llamadas #}
+</div>{# /tab-atenciones #}
 
 
 <!-- ══════════════════════════════════════════
@@ -383,7 +383,7 @@
             {% else %}
             <div style="text-align:center;padding:48px 24px;color:#9ca3af;">
                 <i class="bi bi-clipboard2-x" style="font-size:32px;display:block;margin-bottom:10px;color:#d1d5db;"></i>
-                <p style="font-size:13px;margin:0;">No hay pasos. Agregá uno arriba.</p>
+                <p style="font-size:13px;margin:0;">No hay pasos. Agrega uno arriba.</p>
             </div>
             {% endif %}
         </div>

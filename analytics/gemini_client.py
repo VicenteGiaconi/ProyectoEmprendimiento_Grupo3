@@ -27,7 +27,7 @@ def _build_config(protocol_rules: dict[str, dict]) -> types.GenerateContentConfi
     )
     system_prompt = (
         "Eres un sistema experto en análisis de calidad de atención al cliente. "
-        "Analiza la transcripción de una llamada entre un Agente y un Cliente.\n\n"
+        "Analiza la transcripción de una atención entre un Agente y un Cliente.\n\n"
         "La transcripción usa etiquetas 'Interlocutor N' porque el sistema de diarización "
         "puede asignar IDs extra: a veces divide a la misma persona en varios IDs, "
         "y a veces detecta fuentes que no son parte de la conversación (ruido de fondo, "
@@ -41,13 +41,13 @@ def _build_config(protocol_rules: dict[str, dict]) -> types.GenerateContentConfi
         "{\n"
         '  "agent_speaker_ids": [0],\n'
         '  "client_speaker_ids": [1],\n'
-        '  "visit_reason": "descripción corta del motivo de la visita/llamada",\n'
+        '  "visit_reason": "descripción corta del motivo de la visita/atención",\n'
         '  "visit_category": "uno de: Reclamo, Consulta, Venta, Devolución, Otro",\n'
         '  "protocol": {\n'
         f"{schema_fields}\n"
         "  },\n"
         '  "fcr": true/false,\n'
-        '  "fcr_justification": "breve justificación de si el problema fue resuelto en esta llamada",\n'
+        '  "fcr_justification": "breve justificación de si el problema fue resuelto en esta atención",\n'
         '  "overall_sentiment": "positivo/neutral/negativo"\n'
         "}\n\n"
         "Pasos de protocolo a evaluar:\n"
@@ -103,7 +103,7 @@ class GeminiClient:
         config = _build_config(protocol_rules)
         response = self._client.models.generate_content(
             model=_MODEL,
-            contents=f"Transcripción de la llamada:\n\n{transcript}",
+            contents=f"Transcripción de la atención:\n\n{transcript}",
             config=config,
         )
         logger.info("Gemini analysis completed with model %s", _MODEL)
@@ -115,7 +115,7 @@ class GeminiClient:
         config = _build_config(protocol_rules)
         response = await self._client.aio.models.generate_content(
             model=_MODEL,
-            contents=f"Transcripción de la llamada:\n\n{transcript}",
+            contents=f"Transcripción de la atención:\n\n{transcript}",
             config=config,
         )
         logger.info("Gemini analysis completed with model %s", _MODEL)
