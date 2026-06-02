@@ -1,64 +1,217 @@
 {% extends "base.html" %}
+{% block nav_dashboard %}active{% endblock %}
+{% block topbar_title %}Detalle de atención{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'dashboard' %}"
+   style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+          border:1px solid #e5e7eb;border-radius:6px;font-size:12.5px;font-weight:500;
+          color:#374151;text-decoration:none;background:#fff;transition:background .1s;"
+   onmouseover="this.style.background='#f9fafb'"
+   onmouseout="this.style.background='#fff'">
+    <i class="bi bi-arrow-left"></i> Volver
+</a>
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Detalle de Atención: {{ audio_file.original_name }}</h2>
-        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">← Volver al Dashboard</a>
+
+<!-- Filename header -->
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+    <div style="width:40px;height:40px;background:var(--em-50);border-radius:10px;
+                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="bi bi-file-earmark-music-fill" style="color:var(--em-600);font-size:18px;"></i>
     </div>
+    <div>
+        <h1 style="font-size:18px;font-weight:700;margin:0;color:#111827;">
+            {{ audio_file.original_name }}
+        </h1>
+        <p style="font-size:12px;color:#9ca3af;margin:2px 0 0;">
+            <i class="bi bi-calendar3 me-1"></i>{{ audio_file.uploaded_at|date:"d/m/Y · H:i" }}
+        </p>
+    </div>
+</div>
 
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm py-3 px-4">
-                <h6 class="text-muted mb-1">Duración total</h6>
-                <h4>{{ audio_file.math_metrics.total_duration|default:"0"|floatformat:1 }} s</h4>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm py-3 px-4">
-                <h6 class="text-muted mb-1">Interrupciones/min</h6>
-                <h4>{{ audio_file.math_metrics.interruption_rate|default:"0"|floatformat:2 }}</h4>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm py-3 px-4">
-                <h6 class="text-muted mb-1">Latencia promedio</h6>
-                <h4>{{ audio_file.math_metrics.avg_reaction_time|default:"0"|floatformat:2 }} s</h4>
+{% if not analysis %}
+<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;
+            padding:14px 18px;display:flex;align-items:center;gap:10px;font-size:13.5px;">
+    <i class="bi bi-exclamation-triangle-fill" style="color:#d97706;font-size:16px;"></i>
+    <span>Este audio todavía no tiene análisis disponible.</span>
+</div>
+
+{% else %}
+
+<!-- ── Stat chips ── -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="stat-chip">
+            <div class="stat-label">Duración total</div>
+            <div style="display:flex;align-items:baseline;gap:5px;margin-top:6px;">
+                <span class="stat-value">{{ analysis.math_metrics.total_duration|default:"0"|floatformat:1 }}</span>
+                <span class="stat-unit">seg</span>
             </div>
         </div>
     </div>
-
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm p-3 h-100">
-                <h5 class="card-title">Distribución del tiempo</h5>
-                <div>{{ fig_monopoly_detail|safe }}</div>
+    <div class="col-sm-4">
+        <div class="stat-chip">
+            <div class="stat-label">Interrupciones / min</div>
+            <div style="display:flex;align-items:baseline;gap:5px;margin-top:6px;">
+                <span class="stat-value">{{ analysis.math_metrics.interruption_rate|default:"0"|floatformat:2 }}</span>
             </div>
         </div>
-
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm p-4 h-100">
-                <h5 class="mb-3">Evaluación Cualitativa (Gemini)</h5>
-                <p><strong>Categoría:</strong> {{ audio_file.gemini_analysis.visit_category|default:"—" }}</p>
-                <p><strong>Motivo:</strong> {{ audio_file.gemini_analysis.visit_reason|default:"—" }}</p>
-                <p><strong>Sentimiento:</strong> {{ audio_file.gemini_analysis.overall_sentiment|default:"—" }}</p>
-                <p>
-                    <strong>Resolución FCR:</strong> 
-                    {% if audio_file.gemini_analysis.fcr %}✅ Sí{% else %}❌ No{% endif %}
-                </p>
-                <p><strong>Justificación FCR:</strong> {{ audio_file.gemini_analysis.fcr_justification|default:"—" }}</p>
-                
-                <h6 class="mt-4 mb-2">Checklist de Protocolo</h6>
-                <ul class="list-group">
-                    {% for step, result in audio_file.gemini_analysis.protocol.steps.items %}
-                    <li class="list-group-item d-flex justify-content-between">
-                        {{ step }}
-                        <span>{% if result %}✅{% else %}❌{% endif %}</span>
-                    </li>
-                    {% endfor %}
-                </ul>
+    </div>
+    <div class="col-sm-4">
+        <div class="stat-chip">
+            <div class="stat-label">Latencia promedio</div>
+            <div style="display:flex;align-items:baseline;gap:5px;margin-top:6px;">
+                <span class="stat-value">{{ analysis.math_metrics.avg_reaction_time|default:"0"|floatformat:2 }}</span>
+                <span class="stat-unit">seg</span>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ── Tabs ── -->
+<div data-tabs>
+<div class="page-tabs">
+    <button class="tab-btn active" data-target="dt-overview">
+        <i class="bi bi-grid-1x2"></i> Resumen
+    </button>
+    <button class="tab-btn" data-target="dt-protocolo">
+        <i class="bi bi-list-check"></i> Protocolo
+    </button>
+</div>
+
+<!-- Tab: Resumen -->
+<div class="tab-panel active" id="dt-overview">
+<div class="row g-3">
+
+    <!-- Distribución de tiempo -->
+    <div class="col-md-5">
+        <div class="card" style="padding:16px 18px 8px;height:100%;">
+            <div class="card-header-bar">
+                <i class="bi bi-pie-chart-fill" style="color:var(--em-500);font-size:13px;"></i>
+                <span class="card-title">Distribución del tiempo</span>
+            </div>
+            {% if fig_monopoly_detail %}
+                {{ fig_monopoly_detail|safe }}
+            {% else %}
+                <div class="chart-empty">
+                    <i class="bi bi-pie-chart"></i>
+                    <span>Sin datos de distribución</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Evaluación Gemini -->
+    <div class="col-md-7">
+        {% if analysis.gemini_analysis %}
+        <div class="card" style="padding:20px 22px;height:100%;">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;
+                        letter-spacing:.07em;color:#9ca3af;margin-bottom:16px;">
+                <i class="bi bi-stars me-1" style="color:var(--em-500);"></i>Evaluación Gemini
+            </div>
+
+            <!-- Tag row -->
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">
+                {% if analysis.gemini_analysis.visit_category %}
+                <span class="badge badge-blue">
+                    <i class="bi bi-tag"></i> {{ analysis.gemini_analysis.visit_category }}
+                </span>
+                {% endif %}
+
+                {% if analysis.gemini_analysis.overall_sentiment == 'positivo' %}
+                    <span class="badge badge-green"><i class="bi bi-emoji-smile"></i> Positivo</span>
+                {% elif analysis.gemini_analysis.overall_sentiment == 'negativo' %}
+                    <span class="badge badge-red"><i class="bi bi-emoji-frown"></i> Negativo</span>
+                {% elif analysis.gemini_analysis.overall_sentiment == 'neutral' %}
+                    <span class="badge badge-yellow"><i class="bi bi-emoji-neutral"></i> Neutral</span>
+                {% endif %}
+
+                {% if analysis.gemini_analysis.fcr %}
+                    <span class="badge badge-green"><i class="bi bi-check-circle"></i> FCR resuelto</span>
+                {% else %}
+                    <span class="badge badge-red"><i class="bi bi-x-circle"></i> No resuelto</span>
+                {% endif %}
+            </div>
+
+            <!-- Motivo -->
+            <div style="margin-bottom:14px;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;
+                            letter-spacing:.07em;color:#9ca3af;margin-bottom:5px;">Motivo de la llamada</div>
+                <p style="font-size:13.5px;color:#374151;margin:0;line-height:1.5;">
+                    {{ analysis.gemini_analysis.visit_reason|default:"—" }}
+                </p>
+            </div>
+
+            <!-- Justificación FCR -->
+            <div style="background:#f9fafb;border-radius:8px;padding:12px 14px;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;
+                            letter-spacing:.07em;color:#9ca3af;margin-bottom:6px;">Justificación FCR</div>
+                <p style="font-size:13px;color:#4b5563;margin:0;line-height:1.6;">
+                    {{ analysis.gemini_analysis.fcr_justification|default:"—" }}
+                </p>
+            </div>
+        </div>
+        {% else %}
+        <div class="card" style="padding:48px 24px;text-align:center;height:100%;">
+            <div class="chart-empty">
+                <i class="bi bi-robot"></i>
+                <span>Análisis Gemini no disponible</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+</div>{# /dt-overview #}
+
+<!-- Tab: Protocolo -->
+<div class="tab-panel" id="dt-protocolo">
+<div class="card" style="overflow:hidden;">
+    {% if protocol_steps %}
+
+    <!-- Progress summary -->
+    {% with total=protocol_steps|length %}
+    <div style="padding:16px 20px;border-bottom:1px solid #f3f4f6;
+                display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-weight:600;font-size:14px;">Checklist de protocolo</span>
+        <span class="badge badge-purple">{{ total }} pasos</span>
+    </div>
+    {% endwith %}
+
+    <div style="padding:0 20px;">
+        {% for label, result in protocol_steps %}
+        <div class="checklist-item">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:20px;height:20px;border-radius:50%;flex-shrink:0;
+                            display:flex;align-items:center;justify-content:center;font-size:11px;
+                            {% if result %}background:#f0fdf4;color:#16a34a;
+                            {% else %}background:#fef2f2;color:#dc2626;{% endif %}">
+                    <i class="bi {% if result %}bi-check-lg{% else %}bi-x-lg{% endif %}"></i>
+                </div>
+                <span>{{ label }}</span>
+            </div>
+            {% if result %}
+                <span class="badge badge-green">Cumplido</span>
+            {% else %}
+                <span class="badge badge-red">No cumplido</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div style="text-align:center;padding:48px;color:#9ca3af;">
+        <i class="bi bi-clipboard2-x" style="font-size:32px;display:block;margin-bottom:10px;color:#d1d5db;"></i>
+        <p style="font-size:13px;margin:0;">Sin pasos de protocolo registrados.</p>
+    </div>
+    {% endif %}
+</div>
+</div>{# /dt-protocolo #}
+
+</div>{# /data-tabs #}
+
+{% endif %}{# /analysis #}
+
 {% endblock %}

@@ -1,43 +1,145 @@
 {% extends "base.html" %}
+{% block title %}Subir Audio · ClAudIA{% endblock %}
+{% block nav_upload %}active{% endblock %}
+{% block topbar_title %}Subir Audio{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        <div class="card shadow-sm mt-5">
-            <div class="card-header bg-white pt-4 pb-2 text-center border-0">
-                <h2>Subir Archivo de Audio</h2>
-                <p class="text-muted">Formatos permitidos: .mp3, .wav</p>
-            </div>
-            <div class="card-body px-5 pb-5">
-                <form method="post" enctype="multipart/form-data" id="upload-form">
-                    {% csrf_token %}
-                    
-                    <div class="mb-4">
-                        {{ form.as_p }}
-                    </div>
-                    
-                    <button type="submit" id="upload-button" class="btn btn-primary w-100 py-2">
-                        Subir y Analizar
-                    </button>
 
-                    <div id="loading-message" class="alert alert-info mt-3 text-center" style="display:none;" aria-live="polite">
-                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Transcribiendo y analizando con Gemini... esto puede tomar unos segundos.
-                    </div>
-                </form>
+<div style="max-width:540px;margin:0 auto;">
+
+    <!-- Card principal -->
+    <div class="card" style="padding:28px 32px;">
+
+        <div style="text-align:center;margin-bottom:24px;">
+            <div style="width:56px;height:56px;background:linear-gradient(135deg,var(--em-500),var(--em-700));
+                        border-radius:14px;display:inline-flex;align-items:center;
+                        justify-content:center;margin-bottom:14px;">
+                <i class="bi bi-cloud-arrow-up-fill" style="color:#fff;font-size:24px;"></i>
             </div>
+            <h2 style="font-size:18px;font-weight:700;margin:0 0 4px;">Subir archivo de audio</h2>
+            <p style="font-size:13px;color:#9ca3af;margin:0;">MP3 o WAV · máx. 50 MB</p>
         </div>
+
+        <form method="post" enctype="multipart/form-data" id="upload-form">
+            {% csrf_token %}
+
+            <!-- Dropzone -->
+            <label for="id_file" class="dropzone" id="dropzone"
+                   style="display:block;margin-bottom:20px;">
+                <i class="bi bi-file-earmark-music" style="font-size:36px;color:var(--em-300);margin-bottom:10px;display:block;"></i>
+                <p style="font-weight:600;font-size:14px;margin:0 0 4px;">
+                    Arrastrá tu archivo aquí
+                </p>
+                <p style="font-size:12.5px;color:#9ca3af;margin:0 0 12px;">
+                    o hacé clic para seleccionar
+                </p>
+                <span id="file-label"
+                      style="display:inline-block;padding:4px 12px;border-radius:6px;
+                             background:#f3f4f6;font-size:12px;color:#6b7280;border:1px solid #e5e7eb;">
+                    Ningún archivo seleccionado
+                </span>
+                <div style="display:none;">{{ form.file }}</div>
+            </label>
+
+            {% if form.file.errors %}
+            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:7px;
+                        padding:10px 14px;margin-bottom:16px;font-size:13px;color:#b91c1c;
+                        display:flex;align-items:center;gap:8px;">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                {% for error in form.file.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Submit -->
+            <button type="submit" id="upload-btn"
+                    style="width:100%;padding:11px;border:none;border-radius:8px;
+                           background:linear-gradient(135deg,var(--em-500),var(--em-700));
+                           color:#fff;font-size:14px;font-weight:600;font-family:inherit;
+                           cursor:pointer;display:flex;align-items:center;
+                           justify-content:center;gap:8px;transition:opacity .15s;">
+                <i class="bi bi-cloud-arrow-up-fill"></i> Subir y analizar
+            </button>
+
+            <!-- Loading -->
+            <div id="loading-box" style="display:none;margin-top:16px;
+                 background:var(--em-50);border:1px solid var(--em-200);border-radius:8px;padding:14px 16px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                    <div style="width:32px;height:32px;background:var(--em-100);border-radius:8px;
+                                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <div class="spinner-border spinner-border-sm text-primary"
+                             style="width:16px;height:16px;border-width:2px;" role="status"></div>
+                    </div>
+                    <div>
+                        <p style="font-size:13.5px;font-weight:600;margin:0;color:var(--em-800);">
+                            Procesando tu audio…
+                        </p>
+                        <p style="font-size:12px;color:var(--em-600);margin:0;">
+                            Esto puede tardar 30–60 segundos
+                        </p>
+                    </div>
+                </div>
+                <!-- Animated steps -->
+                <div id="step-transcribe" style="display:flex;align-items:center;gap:8px;
+                     font-size:12px;color:var(--em-700);margin-bottom:5px;">
+                    <i class="bi bi-soundwave"></i> Transcribiendo con Deepgram…
+                </div>
+                <div id="step-gemini" style="display:flex;align-items:center;gap:8px;
+                     font-size:12px;color:#9ca3af;">
+                    <i class="bi bi-stars"></i> Analizando con Gemini…
+                </div>
+            </div>
+
+        </form>
     </div>
+
 </div>
 
 <script>
-    document.getElementById('upload-form').addEventListener('submit', function() {
-        const btn = document.getElementById('upload-button');
-        const msg = document.getElementById('loading-message');
-        
-        btn.disabled = true;
-        btn.innerText = 'Procesando...';
-        msg.style.display = 'block';
+(function() {
+    const input    = document.getElementById('id_file');
+    const dropzone = document.getElementById('dropzone');
+    const label    = document.getElementById('file-label');
+    const form     = document.getElementById('upload-form');
+    const btn      = document.getElementById('upload-btn');
+    const loading  = document.getElementById('loading-box');
+    const stepG    = document.getElementById('step-gemini');
+
+    input.addEventListener('change', function() {
+        if (this.files.length) {
+            label.textContent = this.files[0].name;
+            label.style.background = 'var(--em-100)';
+            label.style.color = 'var(--em-800)';
+            label.style.borderColor = 'var(--em-300)';
+        }
     });
+
+    ['dragover','dragenter'].forEach(ev =>
+        dropzone.addEventListener(ev, e => {
+            e.preventDefault();
+            dropzone.classList.add('drag-over');
+        })
+    );
+    ['dragleave','drop'].forEach(ev =>
+        dropzone.addEventListener(ev, () => dropzone.classList.remove('drag-over'))
+    );
+    dropzone.addEventListener('drop', e => {
+        e.preventDefault();
+        if (e.dataTransfer.files.length) {
+            input.files = e.dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
+        }
+    });
+
+    form.addEventListener('submit', function() {
+        btn.disabled = true;
+        btn.style.opacity = '.6';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" style="width:14px;height:14px;border-width:2px;" aria-hidden="true"></span> Procesando…';
+        loading.style.display = 'block';
+        // Animate step 2 after delay
+        setTimeout(function() {
+            stepG.style.color = 'var(--em-600)';
+        }, 15000);
+    });
+})();
 </script>
 {% endblock %}
