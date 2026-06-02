@@ -365,6 +365,15 @@
             <a class="nav-link" href="{% url 'upload_audio' %}">
                 <i class="bi bi-plus-circle"></i> Nueva atención
             </a>
+            <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                {% csrf_token %}
+                <button type="submit" class="nav-link"
+                        style="width:100%;background:none;border:none;cursor:pointer;text-align:left;">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>{{ request.user.username }}</span>
+                    <span style="margin-left:auto;font-size:11px;opacity:.5;">Salir</span>
+                </button>
+            </form>
         </div>
     </aside>
 

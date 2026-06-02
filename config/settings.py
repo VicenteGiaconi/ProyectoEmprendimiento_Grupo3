@@ -128,6 +128,10 @@ MAX_AUDIO_SIZE_MB = 50
 
 DEEPGRAM_API_KEY = os.environ.get('DEEPGRAM_API_KEY', '')
 
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

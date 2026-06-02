@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pandas as pd
 import plotly.express as px
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 
 from .forms import AudioFileUploadForm
@@ -96,6 +97,7 @@ def _chart_html(fig) -> str:
     return fig.to_html(full_html=False, include_plotlyjs=False)
 
 
+@login_required
 def upload_audio(request):
     if request.method == 'POST':
         form = AudioFileUploadForm(request.POST, request.FILES)
@@ -129,6 +131,7 @@ def upload_audio(request):
     return render(request, 'upload.html', {'form': form})
 
 
+@login_required
 def dashboard(request):
     if request.method == 'POST':
         if 'add_rule' in request.POST:
@@ -331,6 +334,7 @@ def dashboard(request):
     })
 
 
+@login_required
 def detail(request, audio_file_id):
     audio_file = get_object_or_404(AudioFile, id=audio_file_id)
     analysis = get_analysis(audio_file_id)

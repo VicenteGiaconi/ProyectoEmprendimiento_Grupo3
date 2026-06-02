@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión · ClAudIA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+    :root {
+        --em-50:  #ecfdf5; --em-100: #d1fae5; --em-200: #a7f3d0;
+        --em-300: #6ee7b7; --em-400: #34d399; --em-500: #10b981;
+        --em-600: #059669; --em-700: #047857; --em-800: #065f46;
+        --em-900: #064e3b; --em-950: #022c22;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+        font-family: 'Inter', system-ui, sans-serif;
+        background: #f0f2f5;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        font-size: 14px;
+    }
+    .login-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        box-shadow: 0 4px 24px rgba(0,0,0,.07);
+        padding: 36px 40px;
+        width: 100%;
+        max-width: 400px;
+    }
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 28px;
+        justify-content: center;
+    }
+    .brand-icon {
+        width: 40px; height: 40px;
+        background: linear-gradient(135deg, var(--em-500), var(--em-700));
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 20px;
+    }
+    .brand-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        letter-spacing: -.3px;
+    }
+    h1 {
+        font-size: 17px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 4px;
+        text-align: center;
+    }
+    .subtitle {
+        font-size: 13px;
+        color: #9ca3af;
+        text-align: center;
+        margin: 0 0 28px;
+    }
+    label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 5px;
+    }
+    .input-wrap {
+        position: relative;
+        margin-bottom: 16px;
+    }
+    .input-wrap i {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 14px;
+    }
+    input[type="text"], input[type="password"] {
+        width: 100%;
+        padding: 9px 12px 9px 36px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-family: inherit;
+        color: #111827;
+        outline: none;
+        transition: border-color .12s, box-shadow .12s;
+    }
+    input:focus {
+        border-color: var(--em-500);
+        box-shadow: 0 0 0 3px rgba(16,185,129,.12);
+    }
+    .error-box {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 18px;
+        font-size: 13px;
+        color: #b91c1c;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-login {
+        width: 100%;
+        padding: 11px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--em-500), var(--em-700));
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: opacity .15s;
+        margin-top: 4px;
+    }
+    .btn-login:hover { opacity: .9; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="brand">
+        <div class="brand-icon"><i class="bi bi-headset"></i></div>
+        <span class="brand-name">ClAudIA</span>
+    </div>
+
+    <h1>Bienvenido</h1>
+    <p class="subtitle">Inicia sesión para continuar</p>
+
+    {% if form.errors %}
+    <div class="error-box">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        Usuario o contraseña incorrectos. Intenta de nuevo.
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <label for="id_username">Usuario</label>
+        <div class="input-wrap">
+            <i class="bi bi-person"></i>
+            <input type="text" name="username" id="id_username"
+                   autocomplete="username" autofocus required
+                   placeholder="Tu usuario">
+        </div>
+
+        <label for="id_password">Contraseña</label>
+        <div class="input-wrap">
+            <i class="bi bi-lock"></i>
+            <input type="password" name="password" id="id_password"
+                   autocomplete="current-password" required
+                   placeholder="Tu contraseña">
+        </div>
+
+        <button type="submit" class="btn-login">
+            <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+        </button>
+    </form>
+</div>
+
+</body>
+</html>
